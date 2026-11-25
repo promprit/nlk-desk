@@ -175,3 +175,30 @@ test('nlk status works after the repo folder moves', () => {
   assert.equal(r.status, 0, r.stdout + r.stderr)
   assert.match(r.stdout, /NLK is not running/)
 })
+
+test('re-running install with the agents loaded restarts them', () => {
+  const home = tmpHome()
+  install(home)
+  const stubs = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-stubs-'))
+  for (const f of fs.readdirSync(STUBS)) fs.copyFileSync(path.join(STUBS, f), path.join(stubs, f))
+  fs.writeFileSync(path.join(stubs, 'launchctl'), [
+    '#!/bin/bash',
+    'echo "launchctl $*" >> "$HOME/stub.log"',
+    'label=${2##*/}; label=${label%.plist}',
+    'case ${1:-} in',
+    '  print) [ -f "$HOME/loaded-$label" ] ;;',
+    '  bootstrap) touch "$HOME/loaded-$(basename "${3%.plist}")" ;;',
+    '  bootout) rm -f "$HOME/loaded-$label" ;;',
+    'esac',
+    'exit 0',
+    '',
+  ].join('\n'))
+  for (const f of fs.readdirSync(stubs)) fs.chmodSync(path.join(stubs, f), 0o755)
+  for (const l of ['session', 'svc']) fs.writeFileSync(path.join(home, `loaded-com.nlk.${l}`), '')
+  const before = log(home).length
+  const r = run(home, 'install.sh', [], { stubs })
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+  const added = log(home).slice(before)
+  for (const l of ['session', 'svc']) assert.match(added, new RegExp(`launchctl bootout gui/\\d+/com\\.nlk\\.${l}`))
+  assert.match(added, /launchctl bootstrap gui\/\d+ .*com\.nlk\.session\.plist/)
+})
