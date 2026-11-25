@@ -92,4 +92,4 @@ NLK can then read and summarise, never send. Never connect work email.
 - **The installer prints "Claude Code … is newer than tested".** Send that line to whoever gave you NLK.
 - **"Telegram channels are turned off for this Claude account's organization".** Your Claude account is managed by an organization that disables channels, so NLK cannot run on it. Use a personal Pro account.
 - **Lost the bot token.** In BotFather send `/token` and pick your bot.
-- **Pair again** (new phone or Telegram account): delete `~/.nlk/claude/channels/telegram-nlk/access.json` and run `./install.sh`.
+- **Pair again** (new phone or Telegram account): run `./nlk stop` first so NLK releases the file, then delete `~/.nlk/claude/channels/telegram-nlk/access.json` and run `./install.sh` (it starts NLK again).
