@@ -132,13 +132,15 @@ fi
 node "$SETUP/write.ts" all >/dev/null
 UID_=$(id -u)
 STARTED=0
+LOADED=0
 for l in "${LABELS[@]}"; do
   p="$HOME/Library/LaunchAgents/$l.plist"
   [ -f "$p" ] || continue
-  launchctl print "gui/$UID_/$l" >/dev/null 2>&1 && continue
+  if launchctl print "gui/$UID_/$l" >/dev/null 2>&1; then LOADED=1; continue; fi
   launchctl bootstrap "gui/$UID_" "$p"
   STARTED=1
 done
+[ "$LOADED" = 1 ] && bash "$NLK/ctl.sh" restart >/dev/null
 if [ "$STARTED" = 1 ]; then
   sleep "${NLK_WAIT_CHANNELS:-10}"
   PANE=$(tmux -L nlk capture-pane -p -t nlk 2>/dev/null || true)
