@@ -25,7 +25,7 @@ need() {
   command -v "$1" >/dev/null 2>&1 && return 0
   echo "$1 is missing. To install it, I would run: $2"
   yes_no "Run it now? [y/N]" || die "$1 is required; install it and run ./install.sh again."
-  $2
+  bash -c "$2"
 }
 need brew "/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
 need node "brew install node@24"
