@@ -26,9 +26,28 @@ need() {
   echo "$1 is missing. To install it, I would run: $2"
   yes_no "Run it now? [y/N]" || die "$1 is required; install it and run ./install.sh again."
   bash -c "$2"
+  brew_env
 }
+brew_env() {
+  command -v brew >/dev/null 2>&1 && return 0
+  local b
+  for b in ${NLK_BREW_PATHS:-/opt/homebrew/bin/brew /usr/local/bin/brew}; do
+    [ -x "$b" ] && { eval "$("$b" shellenv)"; return 0; }
+  done
+  return 0
+}
+node_keg() {
+  local d
+  d=$(brew --prefix node@24 2>/dev/null || true)
+  [ -n "$d" ] && [ -x "$d/bin/node" ] && PATH="$d/bin:$PATH"
+  return 0
+}
+brew_env
 need brew "/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+brew_env
+node_keg
 need node "brew install node@24"
+node_keg
 need tmux "brew install tmux"
 need bun "brew install oven-sh/bun/bun"
 need claude "brew install --cask claude-code"
