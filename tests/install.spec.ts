@@ -137,6 +137,18 @@ test('nlk backup copies memory and config', () => {
   assert.ok(fs.existsSync(path.join(home, 'NLK-backups', dir ?? '', 'config.json')))
 })
 
+test('nlk backup with config.json missing exits 0 and uninstall reaches the delete prompt', () => {
+  const home = tmpHome()
+  install(home)
+  fs.rmSync(path.join(home, '.nlk/config.json'))
+  const backup = run(home, 'nlk', [], { args: ['backup'] })
+  assert.equal(backup.status, 0, backup.stdout + backup.stderr)
+  const uninstall = run(home, 'uninstall.sh', ['y', 'n'])
+  assert.equal(uninstall.status, 0, uninstall.stdout + uninstall.stderr)
+  assert.match(uninstall.stdout + uninstall.stderr, /Delete ~\/\.nlk \(memory included\)\? \[y\/N\]/)
+  assert.match(uninstall.stdout, /~\/\.nlk kept/)
+})
+
 test('uninstall leaves nothing but backups', () => {
   const home = tmpHome()
   install(home)
