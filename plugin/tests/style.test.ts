@@ -25,6 +25,11 @@ test('age and gender pick the particles, self word and address', () => {
   for (const s of ['ค่ะ', 'พี่', 'น้องNok']) expect(fo).toContain(s)
 })
 
+test('a full style block overrides persona.md rules on particles, self word, address, tone and language', () => {
+  const b = styleBlock(full)
+  expect(b).toContain('overrides any particle, self word, form of address, tone or language rule in persona.md')
+})
+
 test('each tone, emoji and lang adds its own line', () => {
   expect(styleBlock({ ...full, tone: 'playful' })).toContain('teas')
   expect(styleBlock({ ...full, tone: 'warm' })).toContain('encouraging')
