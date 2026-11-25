@@ -11,3 +11,14 @@ test('CLAUDE.md carries the KPMG rule and imports both private files', () => {
   expect(md.split('\n')).toContain(KPMG)
   for (const banned of ['vault', 'freak', '/ds', 'music', 'Master', 'bot_', 'Approve']) expect(md).not.toContain(banned)
 })
+
+test('CLAUDE.md carries the onboarding interview, /setup and /help', () => {
+  const md = deskClaudeMd()
+  for (const s of ['## Getting to know the owner', '[nlk:onboarding]', 'style_set', '/setup', '/help', 'gender', 'age', 'tone', 'emoji', 'language', 'callOwner']) expect(md).toContain(s)
+})
+
+test('CLAUDE.md follows the style block', () => {
+  const md = deskClaudeMd()
+  expect(md).toContain('Follow the <style> block')
+  for (const s of ['ค่ะ', 'คะ', 'แป๊บนะคะ']) expect(md).not.toContain(s)
+})

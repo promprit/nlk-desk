@@ -1,4 +1,5 @@
 # Core facts about the owner
+<!-- NLK fills most of this in its memory during the first chat; add anything here it should always know. -->
 
 ## City
 <!-- example: Bangkok -->
