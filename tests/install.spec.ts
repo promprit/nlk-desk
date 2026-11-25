@@ -316,3 +316,35 @@ test('re-running install with the agents loaded restarts them', () => {
   for (const l of ['session', 'svc']) assert.match(added, new RegExp(`launchctl bootout gui/\\d+/com\\.nlk\\.${l}`))
   assert.match(added, /launchctl bootstrap gui\/\d+ .*com\.nlk\.session\.plist/)
 })
+
+test('re-running install boots out com.nlk.svc before npm ci replaces node_modules', () => {
+  const home = tmpHome()
+  install(home)
+  const stubs = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-stubs-'))
+  for (const f of fs.readdirSync(STUBS)) fs.copyFileSync(path.join(STUBS, f), path.join(stubs, f))
+  fs.mkdirSync(path.join(home, '.local/bin'), { recursive: true })
+  fs.writeFileSync(path.join(home, '.local/bin/launchctl'), [
+    '#!/bin/bash',
+    'echo "launchctl $*" >> "$HOME/stub.log"',
+    'label=${2##*/}; label=${label%.plist}',
+    'case ${1:-} in',
+    '  print) [ -f "$HOME/loaded-$label" ]; exit $? ;;',
+    '  bootstrap) touch "$HOME/loaded-$(basename "${3%.plist}")" ;;',
+    '  bootout) rm -f "$HOME/loaded-$label" ;;',
+    'esac',
+    'exit 0',
+    '',
+  ].join('\n'))
+  fs.chmodSync(path.join(home, '.local/bin/launchctl'), 0o755)
+  fs.copyFileSync(path.join(home, '.local/bin/launchctl'), path.join(stubs, 'launchctl'))
+  for (const f of fs.readdirSync(stubs)) fs.chmodSync(path.join(stubs, f), 0o755)
+  for (const l of ['session', 'svc']) fs.writeFileSync(path.join(home, `loaded-com.nlk.${l}`), '')
+  const before = log(home).length
+  const r = run(home, 'install.sh', [], { stubs })
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+  const added = log(home).slice(before)
+  const boot = added.search(/launchctl bootout gui\/\d+\/com\.nlk\.svc/)
+  const ci = added.indexOf('npm ci')
+  assert.ok(ci >= 0, `npm ci was never run\n${added}`)
+  assert.ok(boot >= 0 && boot < ci, `com.nlk.svc must be booted out before npm ci\n${added}`)
+})
