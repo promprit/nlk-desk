@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "bun $*" >> "$HOME/stub.log"
+exit 0

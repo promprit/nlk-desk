@@ -1,0 +1,10 @@
+#!/bin/bash
+echo "curl $*" | sed -E 's#/bot[^/ ]*/#/bot<redacted>/#g' >> "$HOME/stub.log"
+case "$*" in
+  *getMe*) echo '{"ok":true,"result":{"id":1,"username":"nlk_test_bot"}}' ;;
+  *getUpdates*offset*) echo '{"ok":true,"result":[]}' ;;
+  *getUpdates*) echo '{"ok":true,"result":[{"update_id":7,"message":{"chat":{"id":111},"from":{"id":111,"first_name":"Test"},"text":"hi"}}]}' ;;
+  *geocoding*) echo '{"results":[{"latitude":13.75,"longitude":100.5,"name":"Bangkok"}]}' ;;
+  *sendMessage*) echo '{"ok":true}' ;;
+  *) echo '{}' ;;
+esac

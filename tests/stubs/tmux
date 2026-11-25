@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "tmux $*" >> "$HOME/stub.log"
+exit 0

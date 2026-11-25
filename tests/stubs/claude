@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "claude $*" >> "$HOME/stub.log"
+if [ "${1:-}" = "--version" ]; then echo "${STUB_CLAUDE_VERSION:-2.2.0} (Claude Code)"; exit 0; fi
+if [ "${1:-}" = "auth" ] && [ "${2:-}" = "status" ]; then [ -f "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.stub-login" ]; exit $?; fi
+if [ $# -eq 0 ]; then mkdir -p "$CLAUDE_CONFIG_DIR"; touch "$CLAUDE_CONFIG_DIR/.stub-login"; fi
+exit 0

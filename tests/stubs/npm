@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "npm $*" >> "$HOME/stub.log"
+exit 0
