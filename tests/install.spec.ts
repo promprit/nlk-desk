@@ -348,3 +348,12 @@ test('re-running install boots out com.nlk.svc before npm ci replaces node_modul
   assert.ok(ci >= 0, `npm ci was never run\n${added}`)
   assert.ok(boot >= 0 && boot < ci, `com.nlk.svc must be booted out before npm ci\n${added}`)
 })
+
+test('hello invites the owner to start the getting-to-know-you chat', () => {
+  const home = tmpHome()
+  const r = install(home)
+  const l = log(home)
+  assert.match(l, /เริ่มทำความรู้จักกัน/)
+  assert.ok(!l.includes('ค่ะ'), 'hello must stay gender-neutral')
+  assert.match(r.stdout, /ทัก/)
+})

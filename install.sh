@@ -125,8 +125,8 @@ PERSONA="$NLK/desk/private/persona.md"
 if [ -f "$PERSONA" ]; then
   skip persona
 else
-  NAME=$(ask "What should NLK call you?")
-  CITY=$(ask "Your city for weather?")
+  NAME=$(ask "NLK จะเรียกคุณว่าอะไร? / What should NLK call you?")
+  CITY=$(ask "เมืองของคุณ (สำหรับพยากรณ์อากาศ)? / Your city for weather?")
   LAT=''; LON=''; CITY_NAME=''
   if [ -n "$CITY" ]; then
     GEO=$(curl -s -G --data-urlencode "name=$CITY" --data-urlencode count=1 https://geocoding-api.open-meteo.com/v1/search)
@@ -134,17 +134,17 @@ else
     [ -n "$LAT" ] || echo "Could not find that city; NLK will ask for it later."
   fi
   BRIEF=off; AT=08:30
-  if yes_no "Daily morning brief? [y/N]"; then
+  if yes_no "อยากได้สรุปตอนเช้าทุกวันไหม? / Daily morning brief? [y/N]"; then
     BRIEF=on
-    AT=$(ask "At what time? (HH:MM, default 08:30)")
+    AT=$(ask "กี่โมง? (HH:MM ค่าเริ่มต้น 08:30) / At what time? (HH:MM, default 08:30)")
     [[ $AT =~ ^([01][0-9]|2[0-3]):[0-5][0-9]$ ]] || AT=08:30
   fi
   AWAKE=no
-  yes_no "Keep the Mac awake while charging? [y/N]" && AWAKE=yes
+  yes_no "ให้ Mac ไม่หลับขณะเสียบชาร์จไหม? / Keep the Mac awake while charging? [y/N]" && AWAKE=yes
   node "$SETUP/config.ts" write "$NLK/config.json" "$NAME" "$CITY_NAME" "$LAT" "$LON" "$BRIEF" "$AT" "$AWAKE" > "$NLK/config.json.tmp"
   mv "$NLK/config.json.tmp" "$NLK/config.json"
   node "$SETUP/write.ts" templates >/dev/null
-  if yes_no "Open persona.md and core.md to edit now? [y/N]"; then
+  if yes_no "เปิดไฟล์ persona.md / core.md เพื่อแก้เองไหม? (ไม่จำเป็น: NLK จะถามบุคลิกใน Telegram) / Open the persona files to edit by hand? [y/N]"; then
     open -e "$PERSONA" "$NLK/desk/private/core.md"
   fi
   ok persona
@@ -175,13 +175,15 @@ if [ "$STARTED" = 1 ]; then
     sleep 2
   done
   [ -n "$UP" ] || echo "NLK has not reported Telegram connected yet; check ./nlk status in a minute."
-  curl -s -X POST "$API/bot$TOKEN/sendMessage" -d "chat_id=$OWNER_ID" --data-urlencode "text=สวัสดีค่ะ NLK พร้อมแล้วค่ะ" >/dev/null
+  curl -s -X POST "$API/bot$TOKEN/sendMessage" -d "chat_id=$OWNER_ID" --data-urlencode "text=สวัสดี! 👋 NLK พร้อมแล้ว ทักอะไรมาก็ได้ เพื่อเริ่มทำความรู้จักกันและเลือกบุคลิกของ NLK  /  Hi! NLK is ready. Send any message to start setting up its personality." >/dev/null
 fi
 ok start
 
 cat <<EOF
 
 NLK is installed.
+  ขั้นต่อไป: เปิด Telegram แล้วทักบอทของคุณ NLK จะถามไม่กี่ข้อเพื่อตั้งบุคลิก (เพศ อายุ น้ำเสียง อีโมจิ ภาษา)
+  Next: message your bot on Telegram; NLK will ask a few questions to set its personality.
   Data, memory and logs: $NLK
   Agents: com.nlk.session, com.nlk.svc (in ~/Library/LaunchAgents)
   Watch it:  tmux -L nlk attach   (leave with Ctrl-b d)
