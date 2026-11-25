@@ -138,6 +138,50 @@ test('missing brew with answer y runs the installer command through bash -c', ()
   assert.match(log(home), /^curl -fsSL https:\/\/raw\.githubusercontent\.com\/Homebrew\/install\/HEAD\/install\.sh$/m)
 })
 
+test('brew and node missing: fresh brew and keg-only node@24 are put on PATH', () => {
+  const home = tmpHome()
+  const stubs = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-stubs-'))
+  for (const f of fs.readdirSync(STUBS)) if (f !== 'brew') fs.copyFileSync(path.join(STUBS, f), path.join(stubs, f))
+  const realCurl = path.join(stubs, 'curl-real')
+  fs.renameSync(path.join(stubs, 'curl'), realCurl)
+  // The Homebrew installer URL yields a script that installs a fake brew outside PATH ($HOME/fakebrew).
+  fs.writeFileSync(path.join(stubs, 'curl'), `#!/bin/bash
+case "$*" in
+  *Homebrew/install*)
+    echo "curl $*" >> "$HOME/stub.log"
+    cat <<'INSTALLER'
+P="$HOME/fakebrew"
+mkdir -p "$P/bin"
+cat > "$P/bin/brew" <<'BREW'
+#!/bin/bash
+P="$(cd "$(dirname "$0")/.." && pwd)"
+echo "brew $*" >> "$HOME/stub.log"
+case "$1" in
+  shellenv) echo "export PATH=\\"$P/bin:\\$PATH\\"" ;;
+  --prefix) echo "$P/opt/\${2:-}" ;;
+  install)
+    if [ "$2" = node@24 ]; then mkdir -p "$P/opt/node@24/bin"; ln -sf "$NLK_TEST_NODE" "$P/opt/node@24/bin/node"; fi ;;
+esac
+exit 0
+BREW
+chmod +x "$P/bin/brew"
+INSTALLER
+    ;;
+  *) exec "${realCurl}" "$@" ;;
+esac
+`)
+  for (const f of fs.readdirSync(stubs)) fs.chmodSync(path.join(stubs, f), 0o755)
+  const fake = path.join(home, 'fakebrew/bin/brew')
+  const r = run(home, 'install.sh', ['y', 'y', 'y', 'Test', 'Bangkok', 'n', 'n', 'n'], {
+    stubs, pathTail: '/usr/bin:/bin', env: { NLK_TEST_NODE: process.execPath, NLK_BREW_PATHS: fake },
+  })
+  const out = r.stdout + r.stderr
+  assert.ok(fs.existsSync(fake), `fake brew was not installed\n${out}`)
+  assert.match(log(home), /^brew install node@24$/m, out)
+  assert.doesNotMatch(out, /node is required|command not found|No such file/, out)
+  assert.match(r.stdout, /✓ prerequisites/, out)
+})
+
 test('nlk backup copies memory and config', () => {
   const home = tmpHome()
   install(home)
