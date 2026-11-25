@@ -2,8 +2,7 @@ import * as P from '../paths.ts'
 import { BRIEF_PROMPT, REMIND_SPEC, bangkok, due, next, parseConfig, parseSchedule, reminderFrom, type Schedule } from '../schedule.ts'
 import { WORKER_TIMEOUT_MS, recentMessages, workerArgv, workerEnv, workerOutput, workerPrompt, workerRunsFile, workerTgDir } from '../worker.ts'
 import { OWN } from '../memtools.ts'
-import { hasTools, homeOf, isHost, svc, type Engine } from '../engine.ts'
-import { registerWeatherTools } from './weather.ts'
+import { hasTools, homeOf, svc, type Engine } from '../engine.ts'
 import type { Ctx, On } from './ctx.ts'
 
 const MIN = 60_000
@@ -150,20 +149,8 @@ export async function registerScheduleTools($: Engine) {
   await $.tool.register(REMIND_SPEC)
 }
 
-// The session in the desk folder gets the remind and weather tools; the host session also runs the ticker.
+// The remind tool's call handler. Its registration and the ticker start from wireStatus's session.start hook.
 export function wireSchedule(on: On, _ctx: Ctx) {
-  on('session.start', async ($, e, next) => {
-    if (e.cwd === P.deskDir(await homeOf($)) && (await hasTools($))) {
-      await registerScheduleTools($).catch(() => {})
-      await registerWeatherTools($).catch(() => {})
-      if (await isHost($)) {
-        resetTicker()
-        $.clock.every(60_000, () => void tick($).catch(() => {}))
-      }
-    }
-    return next(e)
-  })
-
   on('tool.call', { tool: `${OWN}${REMIND_SPEC.name}` }, async ($, e) => {
     if (!(await hasTools($))) return { deny: 'NLK tools run only in its own session' }
     return { result: await remindCall($, e as unknown as Record<string, unknown>).catch(err => `the remind tool failed: ${String(err).slice(0, 120)}`) }
