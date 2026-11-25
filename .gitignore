@@ -1,1 +1,6 @@
 .claude/worktrees/
+node_modules/
+.orchestrate/
+.DS_Store
+desk/private/persona.md
+desk/private/core.md

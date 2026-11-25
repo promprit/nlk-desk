@@ -1,0 +1,1 @@
+{ "name": "nlk", "owner": { "name": "NLK" }, "plugins": [ { "name": "nlk", "source": "./plugin", "description": "NLK: a personal Telegram assistant" } ] }
