@@ -1,3 +1,5 @@
+import { parseStyle, type Style } from './style.ts'
+
 const BRIEF_WINDOW = 3 * 60
 const HOUR = 3600_000
 const DAY = 24 * HOUR
@@ -6,7 +8,7 @@ const BANGKOK_MS = 7 * HOUR
 export type Reminder = { id: string; text: string; at: number; every?: 'day' | 'week' | 'month' }
 export type WorkerPending = { kind: 'brief'; at: number }
 export type Schedule = { briefDate?: string; reminders: Reminder[]; lastCheckAt?: number; briefRetry?: string; briefFailAt?: number; lastWorkerError?: string; workerPending?: WorkerPending }
-export type Config = { name?: string; city?: { name: string; lat: number; lon: number }; brief?: { on: boolean; at: string }; awake?: boolean; tools?: { allow?: string[] }; testedClaude?: string }
+export type Config = { name?: string; city?: { name: string; lat: number; lon: number }; brief?: { on: boolean; at: string }; awake?: boolean; tools?: { allow?: string[] }; testedClaude?: string; style?: Style }
 
 export function bangkok(now: number): { date: string; minutes: number } {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(now))
@@ -33,6 +35,8 @@ export function parseConfig(text: string | null): Config {
     if (typeof j.awake === 'boolean') c.awake = j.awake
     if (Array.isArray(j.tools?.allow)) c.tools = { allow: j.tools.allow.filter((t: unknown) => typeof t === 'string') }
     if (typeof j.testedClaude === 'string') c.testedClaude = j.testedClaude
+    const st = parseStyle(j.style)
+    if (Object.keys(st).length) c.style = st
     return c
   } catch {
     return {}

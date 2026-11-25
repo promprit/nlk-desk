@@ -7,6 +7,7 @@ import type { StatusFile } from '../status.ts'
 import { healStep, RECONNECT, type HealState } from '../tgheal.ts'
 import { registerMemTools } from './mem.ts'
 import { registerWeatherTools } from './weather.ts'
+import { registerStyleTool } from './style.ts'
 import { registerScheduleTools, resetTicker, tick } from './schedule.ts'
 import type { Ctx, On } from './ctx.ts'
 
@@ -81,6 +82,7 @@ async function openGate($: Engine, cwd: string, now: number) {
 async function registerAll($: Engine) {
   await registerMemTools($).catch(() => {})
   await registerWeatherTools($).catch(() => {})
+  await registerStyleTool($).catch(() => {})
   await registerScheduleTools($).catch(() => {})
 }
 

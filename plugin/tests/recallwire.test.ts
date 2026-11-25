@@ -55,7 +55,7 @@ test('owner prompt gets the recall block as context, the text untouched', async 
   const w = wire(on, hits)
   await $.prompt.submit({ text: msg('111', 'hi'), origin: TG, isMeta: true } as any)
   expect(w.entered).toEqual([msg('111', 'hi')])
-  expect(w.context.join('\n')).toMatch(/^<recall>[\s\S]*2026-10-20[\s\S]*2026-10-18[\s\S]*<\/recall>$/)
+  expect(w.context.filter(c => c.startsWith('<recall>')).join('\n')).toMatch(/^<recall>[\s\S]*2026-10-20[\s\S]*2026-10-18[\s\S]*<\/recall>$/)
   const search = w.fetched.find(f => f.url.endsWith('/mem/search'))!.body
   expect(search).toEqual({ q: 'hi', k: 3 })
 })
