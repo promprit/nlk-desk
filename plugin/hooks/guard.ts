@@ -334,7 +334,7 @@ function bashVerdict(command: unknown, c: Ctx): Verdict {
     segs.push(g)
   }
   if (/\bsecurity\b/.test(s)) return deny('the keychain is sealed')
-  // ps e / ps -E prints another process's environment, the a token included. A text heuristic over the
+  // ps e / ps -E prints another process's environment, tokens included. A text heuristic over the
   // whole command, so bash -c "ps e" and xargs ps e count too: the word ps, then any later option word with e in it
   // (dash form -E, -ef or BSD letters e, auxe). It fails safe (ps -o etime, ps aux | grep node are denied too) and
   // does not stop an interpreter such as python -c from reading process info another way.
