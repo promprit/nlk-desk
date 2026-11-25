@@ -125,6 +125,19 @@ test('missing prerequisite asks before brew', () => {
   assert.ok(!fs.existsSync(path.join(home, 'stub.log')) || !/^brew /m.test(log(home)))
 })
 
+test('missing brew with answer y runs the installer command through bash -c', () => {
+  const home = tmpHome()
+  const stubs = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-stubs-'))
+  for (const f of fs.readdirSync(STUBS)) if (f !== 'brew') fs.copyFileSync(path.join(STUBS, f), path.join(stubs, f))
+  for (const f of fs.readdirSync(stubs)) fs.chmodSync(path.join(stubs, f), 0o755)
+  const nodeBin = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-node-'))
+  fs.symlinkSync(process.execPath, path.join(nodeBin, 'node'))
+  const r = run(home, 'install.sh', ['y'], { stubs, pathTail: `${nodeBin}:/usr/bin:/bin` })
+  assert.match(r.stdout, /brew is missing/)
+  assert.ok(fs.existsSync(path.join(home, 'stub.log')), `curl stub was never invoked\n${r.stdout}${r.stderr}`)
+  assert.match(log(home), /^curl -fsSL https:\/\/raw\.githubusercontent\.com\/Homebrew\/install\/HEAD\/install\.sh$/m)
+})
+
 test('nlk backup copies memory and config', () => {
   const home = tmpHome()
   install(home)
