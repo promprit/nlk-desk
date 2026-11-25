@@ -194,6 +194,47 @@ test('nlk backup copies memory and config', () => {
   assert.ok(fs.existsSync(path.join(home, 'NLK-backups', dir ?? '', 'config.json')))
 })
 
+// A stub dir whose curl answers the service's /mem/backup call (up) or refuses the connection (down).
+function svcStubs(up: boolean) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-stubs-'))
+  for (const f of fs.readdirSync(STUBS)) fs.copyFileSync(path.join(STUBS, f), path.join(dir, f))
+  const reply = up ? `echo '{"ok":true}'` : 'exit 7'
+  fs.writeFileSync(path.join(dir, 'curl'), `#!/bin/bash
+case "$*" in
+  *4330/mem/backup*) echo "curl $*" >> "$HOME/stub.log"; ${reply} ;;
+  *) exec "${path.join(STUBS, 'curl')}" "$@" ;;
+esac
+`)
+  for (const f of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, f), 0o755)
+  return dir
+}
+
+test('nlk backup with the service up asks it for the backup with the svc.token bearer, no memory cp', () => {
+  const home = tmpHome()
+  install(home)
+  fs.writeFileSync(path.join(home, '.nlk/memory/m.db'), 'data')
+  fs.writeFileSync(path.join(home, '.nlk/svc.token'), 'svc-test-token\n', { mode: 0o600 })
+  const r = run(home, 'nlk', [], { args: ['backup'], stubs: svcStubs(true) })
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+  assert.match(log(home), /127\.0\.0\.1:4330\/mem\/backup/)
+  assert.match(log(home), /Authorization: Bearer svc-test-token/)
+  const [dir] = fs.readdirSync(path.join(home, 'NLK-backups'))
+  assert.ok(fs.existsSync(path.join(home, 'NLK-backups', dir ?? '', 'config.json')))
+  assert.ok(!fs.existsSync(path.join(home, 'NLK-backups', dir ?? '', 'memory')), 'memory was copied while the service was up')
+})
+
+test('nlk backup with the service down falls back to copying memory and config', () => {
+  const home = tmpHome()
+  install(home)
+  fs.writeFileSync(path.join(home, '.nlk/memory/m.db'), 'data')
+  fs.writeFileSync(path.join(home, '.nlk/svc.token'), 'svc-test-token\n', { mode: 0o600 })
+  const r = run(home, 'nlk', [], { args: ['backup'], stubs: svcStubs(false) })
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+  const [dir] = fs.readdirSync(path.join(home, 'NLK-backups'))
+  assert.ok(fs.existsSync(path.join(home, 'NLK-backups', dir ?? '', 'memory/m.db')))
+  assert.ok(fs.existsSync(path.join(home, 'NLK-backups', dir ?? '', 'config.json')))
+})
+
 test('nlk backup with config.json missing exits 0 and uninstall reaches the delete prompt', () => {
   const home = tmpHome()
   install(home)
