@@ -3,7 +3,9 @@ import type { Ctx } from './wire/ctx.ts'
 import { wireGuard } from './wire/guard.ts'
 import { wireInbound } from './wire/inbound.ts'
 import { wireMem } from './wire/mem.ts'
+import { wireSchedule } from './wire/schedule.ts'
 import { wireTyping } from './wire/typing.ts'
+import { wireWeather } from './wire/weather.ts'
 
 const ctx: Ctx = {}
 
@@ -13,4 +15,6 @@ export const register: Register = on => {
   wireInbound(on, ctx)
   wireMem(on, ctx)
   wireTyping(on, ctx)
+  wireSchedule(on, ctx)
+  wireWeather(on, ctx)
 }
