@@ -12,7 +12,6 @@ const DENIES = deniesFile(HOME)
 
 type Opts = { files?: Record<string, string>; core?: 'allow' | 'ask' | 'deny'; env?: Record<string, string | undefined>; links?: Record<string, string> }
 
-// `core` stubs the engine's own verdict beneath the mod's tool.check hook.
 function wire(on: any, opts: Opts = {}) {
   const w = { files: { [`${ALPHA}/README.md`]: '# a\n', [ACCESS]: '{"allowFrom":["111"]}', ...opts.files } as Record<string, string> }
   const env: Record<string, string | undefined> = { NLK_HOST: '1', HOME, CLAUDE_CONFIG_DIR: `${HOME}/.nlk/claude`, ...opts.env }

@@ -11,7 +11,6 @@ const setup = () => {
   return { steps, deps }
 }
 
-// Defect caught: /fresh keeps the poisoned conversation (--continue) or says nothing while the session restarts.
 test('/fresh acknowledges, then restarts the session without resume', async () => {
   const { steps, deps } = setup()
   assert.deepEqual(await freshRoutes(deps)['/fresh']({}), { sent: true })

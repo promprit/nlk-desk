@@ -118,7 +118,6 @@ test('set_location then weather uses it', async () => {
     assert.equal(w.rainWindow, '00:00-23:00')
     assert.equal(w.high, 34.1)
     assert.equal(w.pm25Max, 10)
-    // A place given in the call is used once and not saved.
     await routes['/weather']({ place: 'Phuket' })
     assert.match(await readFile(join(dir, 'location.json'), 'utf8'), /Chiang Mai/)
   } finally { await s.close() }

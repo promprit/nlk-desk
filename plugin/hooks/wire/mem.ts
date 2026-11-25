@@ -7,7 +7,6 @@ export async function registerMemTools($: Engine) {
   for (const spec of MEM_SPECS) await $.tool.register(spec)
 }
 
-// Its session only; the guard's tool.call hook checks each call first.
 export function wireMem(on: On, _ctx: Ctx) {
   for (const spec of MEM_SPECS) {
     on('tool.call', { tool: `${OWN}${spec.name}` }, async ($, e) => {

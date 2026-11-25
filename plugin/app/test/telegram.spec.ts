@@ -13,7 +13,6 @@ function state(paired: boolean) {
   return dir
 }
 
-// Fake that answers sendMessage with `reply`, like Telegram.
 async function fakeSend(reply: string) {
   const hits: { url: string; body: any }[] = []
   const srv = createServer((req, res) => {

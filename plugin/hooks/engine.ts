@@ -53,7 +53,6 @@ export function lockIo($: Engine): LockIo {
   }
 }
 
-// The owner's chat: the first id in the telegram plugin's allowFrom; null until the owner has paired.
 export async function ownerChat($: Engine): Promise<string | null> {
   try {
     const text = await $.fs.read(`${P.telegramState(await homeOf($))}/access.json`)
@@ -64,7 +63,6 @@ export async function ownerChat($: Engine): Promise<string | null> {
   }
 }
 
-// Rewritten whole through a temp file and a rename, so a reader never sees a partial log.
 export async function appendInbound($: Engine, home: string, line: string): Promise<void> {
   await $.process.run(['mkdir', '-p', P.logsDir(home)])
   await withFileLock(lockIo($), P.lockDir(home), async () => {
@@ -77,7 +75,6 @@ export async function appendInbound($: Engine, home: string, line: string): Prom
   })
 }
 
-// Writes the desk CLAUDE.md when it differs from the generated text.
 export async function refreshDeskClaudeMd($: Engine): Promise<void> {
   const text = deskClaudeMd()
   const file = `${P.deskDir(await homeOf($))}/CLAUDE.md`
@@ -85,7 +82,6 @@ export async function refreshDeskClaudeMd($: Engine): Promise<void> {
   if (cur !== text) await $.fs.write(file, text)
 }
 
-// The `kind` keeps the line in the format a denies report reads.
 export async function logDeny($: Engine, rule: string, tool: string): Promise<void> {
   const home = await homeOf($)
   const line = JSON.stringify({ ts: await $.clock.now(), kind: 'guard', rule, tool })
@@ -98,7 +94,6 @@ export async function logDeny($: Engine, rule: string, tool: string): Promise<vo
   })
 }
 
-// Its local service, with the bearer token from svcTokenFile; status 0 when the service is down or the token is missing.
 export async function svc($: Engine, path: string, body?: unknown): Promise<{ ok: boolean; status: number; json: unknown }> {
   try {
     const token = String(await $.fs.read(P.svcTokenFile(await homeOf($)))).trim()
@@ -109,7 +104,7 @@ export async function svc($: Engine, path: string, body?: unknown): Promise<{ ok
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     })
     let json: unknown = null
-    try { json = JSON.parse(r.text) } catch { /* not JSON */ }
+    try { json = JSON.parse(r.text) } catch {}
     return { ok: r.ok, status: r.status, json }
   } catch {
     return { ok: false, status: 0, json: null }

@@ -31,8 +31,6 @@ async function writeStatus($: Engine) {
   await $.fs.write(P.statusFile(await homeOf($)), JSON.stringify(s))
 }
 
-// The Telegram connection: its own poller (its tmux server is the poller's ancestor) and a Bot API getMe.
-// The token stays in this function; only ok, at and a reason reach status.json.
 async function channelTick($: Engine) {
   const tg = P.telegramState(await homeOf($))
   const pid = Number((await $.fs.read(`${tg}/bot.pid`).then(String).catch(() => '')).trim()) || null
@@ -86,7 +84,6 @@ async function registerAll($: Engine) {
   await registerScheduleTools($).catch(() => {})
 }
 
-// The host session: the gate and a status.json heartbeat with the channel report, every minute.
 export function wireStatus(on: On, _ctx: Ctx) {
   on('session.start', async ($, e, next) => {
     for (const t of hostTimers.splice(0)) t.cancel()
@@ -94,7 +91,6 @@ export function wireStatus(on: On, _ctx: Ctx) {
       await startHost($, e.cwd).catch(() => {})
       if (e.cwd === P.deskDir(await homeOf($))) {
         await registerAll($)
-        // After the tools: a lock wait here must never delay them.
         await refreshDeskClaudeMd($).catch(() => {})
       }
     }

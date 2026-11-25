@@ -10,7 +10,6 @@ import { wireWeather } from './wire/weather.ts'
 
 const ctx: Ctx = {}
 
-// Each feature's wiring lives in wire/<feature>.ts; this file only calls them.
 export const register: Register = on => {
   wireStatus(on, ctx)
   wireInbound(on, ctx)

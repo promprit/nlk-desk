@@ -1,4 +1,3 @@
-// The few Node names the setup helpers use; the type-check runs without @types/node.
 declare const process: {
   argv: string[]
   env: Record<string, string | undefined>

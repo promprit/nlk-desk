@@ -6,10 +6,8 @@ const DESK = deskDir('/H')
 const STATUS_FILE = statusFile('/H')
 const TG = telegramState('/H')
 const TOKEN = '123456:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-// tmux server 100 -> claude 200 -> bun run 300 -> bun server.ts 400; a stranger 900 -> 950.
 const PS = ' 100     1\n 200   100\n 300   200\n 400   300\n 900     1\n 950   900\n'
 
-// One stub per engine op; the poller pid and the Bot API status are the options.
 function wire(on: any, o: { pollerPid: string; api: number | 'network'; pane?: string; host?: boolean }) {
   const w = { sent: [] as string[][], files: { [`${TG}/bot.pid`]: o.pollerPid, [`${TG}/.env`]: `TELEGRAM_BOT_TOKEN=${TOKEN}\n` } as Record<string, string>, urls: [] as string[] }
   const env: Record<string, string | undefined> = { NLK_HOST: o.host === false ? undefined : '1', HOME: '/H', CLAUDE_CONFIG_DIR: '/H/.nlk/claude' }
@@ -87,7 +85,6 @@ test('no poller: left out for the first 90 s after start, then reported stopped'
   expect(channels(w)).toEqual({ telegram: { at: NOW + 120_000, ok: false, reason: 'stopped' } })
 })
 
-// Defect caught: after a restart the Telegram server never starts and NLK stays deaf until the owner types /mcp reconnect.
 test('missing channel at 2 min on an idle pane: it types the reconnect once, then Enter', async ($, on) => {
   const clock = mock.clock(on, { now: NOW })
   const { sent } = wire(on, { pollerPid: '', api: 200, pane: '❯ \n  ⏵⏵ auto mode on' })

@@ -52,7 +52,6 @@ const startTurn = ($: any) => $.turn.start({ text: 'x', turnId: 't1' })
 const endTurn = ($: any) => $.turn.complete({ turnId: 't1', answer: 'ok', durationMs: 1, isAborted: false, reason: 'answer' })
 const submit = ($: any, userId: string, body: string) => $.prompt.submit({ text: msg(userId, body), origin: TG, isMeta: true } as any)
 
-// Defect caught: she shows no sign of life during a long job, or keeps typing after she has answered.
 test('his message: typing starts, repeats every 4 s, stops at turn.complete', async ($, on) => {
   const clock = mock.clock(on, { now: NOW })
   const w = wire(on)
@@ -82,7 +81,6 @@ test('typing stops by itself after 5 minutes', async ($, on) => {
   expect(w.typing).toHaveLength(n)
 })
 
-// Defect caught: a stranger's or held message, or a scheduled turn, makes NLK look busy in the owner's chat.
 test('a non-owner and a scheduled turn start no typing', async ($, on) => {
   const clock = mock.clock(on, { now: NOW })
   const w = wire(on)
@@ -94,7 +92,6 @@ test('a non-owner and a scheduled turn start no typing', async ($, on) => {
   expect(w.typing).toEqual([])
 })
 
-// Defect caught: the bot token leaks into a log or deny line when the Bot API call dies; a failure must be silent and end the loop.
 test('a failing send is silent, leaks no token, and ends the loop', async ($, on) => {
   const clock = mock.clock(on, { now: NOW })
   const w = wire(on, { fail: true })

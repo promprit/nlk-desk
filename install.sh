@@ -13,19 +13,15 @@ LABELS=(com.nlk.session com.nlk.svc com.nlk.awake)
 ok() { echo "✓ $1"; }
 skip() { echo "skip $1"; }
 die() { echo "$1" >&2; exit 1; }
-# claude with the NLK config dir
 cl() { CLAUDE_CONFIG_DIR="$CFG" claude "$@"; }
-# Reads one answer (an empty one at end of input).
 ask() { local r=''; printf '%s ' "$1" >&2; IFS= read -r r || true; printf '%s' "$r"; }
 yes_no() { local a; a=$(ask "$1"); [[ $a =~ ^[Yy] ]]; }
-# jget <dotted.path>: one value from JSON on stdin; empty when missing.
 jget() {
   node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{let v=JSON.parse(s);for(const k of process.argv[1].split("."))v=v?.[k];if(v!==undefined&&v!==null)console.log(typeof v==="object"?JSON.stringify(v):v)}catch{}})' "$1"
 }
 
-# 1. prerequisites
 [ "$(uname)" = Darwin ] || die "NLK runs on macOS only."
-need() { # <command> <brew command>
+need() {
   command -v "$1" >/dev/null 2>&1 && return 0
   echo "$1 is missing. To install it, I would run: $2"
   yes_no "Run it now? [y/N]" || die "$1 is required; install it and run ./install.sh again."
@@ -44,7 +40,6 @@ if [ -n "$TESTED" ] && [ "$HAVE" != "$TESTED" ] && [ "$(printf '%s\n%s\n' "$TEST
 fi
 ok prerequisites
 
-# 2. folders and login
 mkdir -p "$NLK"/{claude,desk/private,files,logs,memory}
 if cl auth status >/dev/null 2>&1; then
   skip login
@@ -55,7 +50,6 @@ else
   ok login
 fi
 
-# 4. plugins
 add_market() { cl plugin marketplace list 2>/dev/null | grep -q "$2" || cl plugin marketplace add "$1" >/dev/null; }
 add_plugin() {
   if cl plugin list 2>/dev/null | grep -q "$1"; then cl plugin update "$1" >/dev/null; else cl plugin install "$1" >/dev/null; fi
@@ -68,7 +62,6 @@ node "$SETUP/write.ts" app >/dev/null
 (cd "$NLK/app" && npm ci --omit=dev >/dev/null)
 ok plugins
 
-# 5. token
 ENVF="$TGDIR/.env"
 if [ -f "$ENVF" ]; then
   skip token
@@ -87,7 +80,6 @@ else
 fi
 TOKEN=$(sed -n 's/^TELEGRAM_BOT_TOKEN=//p' "$ENVF")
 
-# 6. pairing
 ACCESS="$TGDIR/access.json"
 if [ -f "$ACCESS" ] && [ -n "$(jget allowFrom.0 < "$ACCESS")" ]; then
   skip pairing
@@ -108,7 +100,6 @@ else
 fi
 OWNER_ID=$(jget allowFrom.0 < "$ACCESS")
 
-# 7. persona
 PERSONA="$NLK/desk/private/persona.md"
 if [ -f "$PERSONA" ]; then
   skip persona
@@ -138,7 +129,6 @@ else
   ok persona
 fi
 
-# 8. start
 node "$SETUP/write.ts" all >/dev/null
 UID_=$(id -u)
 STARTED=0
@@ -166,7 +156,6 @@ if [ "$STARTED" = 1 ]; then
 fi
 ok start
 
-# 9. summary
 cat <<EOF
 
 NLK is installed.

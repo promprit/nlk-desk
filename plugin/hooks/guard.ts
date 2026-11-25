@@ -7,19 +7,16 @@ export type GuardPaths = {
 export type Verdict = { decision: 'allow' | 'deny'; reason?: string }
 
 const PATH_KEYS = new Set(['file_path', 'path', 'notebook_path'])
-// Free text, never opened as a path (a Glob pattern is checked on its own).
 const TEXT_KEYS = new Set(['content', 'old_string', 'new_string', 'new_source', 'text', 'prompt', 'query', 'description', 'pattern'])
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit'])
 const WILD = /[*?[\]{}]/
 // macOS spellings of `/`: the Data firmlink and the boot volume's /Volumes link.
 const ALIAS = /^\/(system\/volumes\/data|volumes\/macintosh hd)(?=\/|$)/
 const ALIAS_IN = /\/(system\/volumes\/data|volumes\/macintosh hd)(?=[/\s]|$)/g
-// Words in front of the real command word.
 const PREFIX = new Set(['sudo', 'doas', 'command', 'builtin', 'exec', 'nice', 'nohup', 'time', 'env', 'caffeinate'])
 const RM = new Set(['rm', 'rmdir', 'unlink', 'trash', 'shred', 'srm'])
 const DEL_WORD = /(?<![\w.-])(rm|rmdir|unlink|trash|shred|srm)\b(?![./-])/
 const DEL_OTHER = /\b(rmtree|rmsync|rmdirsync|unlinksync|os\.remove|os\.unlink|fs\.rm)\b|\.unlink\(|(^|\s)-delete\b|--delete|\bgit\b[^;&|]*\bclean\b|\.trash\b/
-// Commands that walk a folder tree or move/copy/link it somewhere else (`cp`, `grep`, `ls` only with their recursive flag).
 const TREE = new Set(['rg', 'ag', 'ack', 'find', 'fd', 'tar', 'bsdtar', 'gtar', 'zip', '7z', 'rsync', 'du', 'tree', 'ditto', 'mv', 'ln', 'cpio', 'pax', 'scp', 'mdfind'])
 const RELOCATE = new Set(['mv', 'ln', 'cp', 'rsync', 'ditto', 'scp'])
 const READ_ONLY = new Set(['cat', 'head', 'tail', 'less', 'more', 'grep', 'egrep', 'rg', 'jq', 'wc', 'ls', 'stat', 'file', 'diff', 'bat', 'echo'])
@@ -45,7 +42,6 @@ export function under(path: string, root: string): boolean {
   return n === root || n.startsWith(`${root}/`)
 }
 
-// Prefix roots (the last segment also covers longer names).
 export function sealedRoots(home: string): string[] {
   return sealedSpec(home).filter(x => x.read).map(x => x.path)
 }
@@ -67,8 +63,6 @@ function expand(raw: string, home: string, cwd: string | null): string | null {
   return n
 }
 
-// Whether one path segment (maybe a glob) can name the root's segment `want`; `prefix`: `want` also covers longer names.
-// `dots` false: shell globs, where a leading wildcard skips dot names.
 function segMatch(seg: string, want: string, prefix: boolean, dots: boolean): boolean {
   if (!WILD.test(seg)) return prefix ? seg.startsWith(want) : seg === want
   if (!dots && want.startsWith('.') && !seg.startsWith('.')) return false
@@ -78,7 +72,6 @@ function segMatch(seg: string, want: string, prefix: boolean, dots: boolean): bo
 }
 
 type Rel = 'inside' | 'ancestor' | null
-// Where `path` (globs allowed, `**` reaches everything below) sits relative to a sealed root;.
 function relation(path: string, root: string, dots: boolean): Rel {
   const t = path.split('/').filter(Boolean)
   const r = root.split('/').filter(Boolean)
@@ -102,12 +95,9 @@ const ctxOf = (p: GuardPaths): Ctx => ({
 const relationIn = (abs: string, r: string, dots: boolean) => relation(abs, r, dots)
 
 const sealedHit = (abs: string, c: Ctx, dots = true) => c.roots.find(r => relationIn(abs, r, dots) === 'inside')
-// Read alone may open a file below the Telegram inbox (photos and files the owner sends); globs never.
 const readHit = (abs: string, c: Ctx) => (abs.startsWith(`${c.inbox}/`) && !WILD.test(abs) ? undefined : sealedHit(abs, c))
 const nearSealed = (abs: string, c: Ctx, dots = true) => c.roots.some(r => relationIn(abs, r, dots) !== null)
-// Where deletes may happen: the desk and the files folder, never the folder itself.
 const inWritable = (abs: string | null, c: Ctx) => abs !== null && (abs.startsWith(`${c.desk}/`) || abs.startsWith(`${c.files}/`))
-// The desk files the assistant reads but never writes (the same list the launcher settings seal).
 function deskSealedPath(abs: string, c: Ctx): boolean {
   if (!abs.startsWith(`${c.desk}/`)) return false
   const rel = abs.slice(c.desk.length + 1)
@@ -122,7 +112,6 @@ function globRe(seg: string): RegExp {
   return new RegExp(`^${body}$`)
 }
 const SETTINGS = ['settings.json', 'settings.local.json']
-// A glob counts only with a literal letter in it: a bare `*` names every file.
 const isSettings = (path: string) => {
   const b = path.slice(path.lastIndexOf('/') + 1).toLowerCase()
   if (!WILD.test(b)) return SETTINGS.includes(b)
@@ -131,7 +120,6 @@ const isSettings = (path: string) => {
 // A git config file can alias `push` to another word.
 const isGitConfig = (abs: string) => /\/\.gitconfig$|\/\.?git\/config$/.test(abs)
 
-// Collects [key, value] for every string in a tool input (array items take their parent's key).
 function strings(v: unknown, key: string, out: [string, string][], depth = 0): [string, string][] {
   if (depth > 5) return out
   if (typeof v === 'string') out.push([key, v])
@@ -178,7 +166,6 @@ function fileVerdict(tool: string, x: Record<string, unknown>, c: Ctx, real?: { 
   return allow()
 }
 
-// The command word: skips VAR=value words and prefixes such as sudo or env (with their flags).
 function commandAt(words: string[]): number {
   let i = 0
   while (i < words.length) {
@@ -234,14 +221,11 @@ function deleteVerdict(segs: Seg[], s: string, c: Ctx): Verdict {
   return allow()
 }
 
-// Words are lowercased by `flat`, so `-X` reads `-x` and `-F` reads `-f`.
 const ghApiWrites = (args: string[]): boolean => args.some((a, i) =>
   /^(-f|--field|--raw-field|--input)(=|$)/.test(a) || /^-f./.test(a)
   || ((a === '-x' || a === '--method') && args[i + 1] !== 'get') || (/^(-x|--method=)./.test(a) && !/^(-x|--method=)get$/.test(a)))
-// gh is allow-listed: anything else may post, change or publish on GitHub in the owner's name.
 const GH_READ = /^(view|list|status|diff|checks)$/
 
-// The non-flag words of a gh call, `-R/--repo <repo>` skipped.
 function ghWords(args: string[]): string[] {
   const out: string[] = []
   for (let i = 0; i < args.length; i++) {
@@ -276,7 +260,6 @@ const webWrites = (name: string, args: string[]): boolean => args.some((a, i) =>
   || /^(-d|--data|-F|--form|--json|-T|--upload-file|--post-data|--post-file|--body-data|--body-file)/.test(a)
   || ((name === 'http' || name === 'xh') && (WRITE_METHOD.test(a) || a === '-f' || (!a.startsWith('-') && !/^[^=]+==/.test(a) && /^[^=:@/]+(:=|=|@)/.test(a)))))
 
-// curl, wget, httpie and xh may read anywhere but may not write to a host that posts in the owner's name.
 function webVerdict(command: string): Verdict {
   for (const words of segmentsOf(command.replace(/\\/g, '').replace(/['"]/g, ''))) {
     const i = commandAt(words)
@@ -291,14 +274,12 @@ function bashVerdict(command: unknown, c: Ctx): Verdict {
   if (typeof command !== 'string' || !command.trim()) return deny('no command')
   const s = flat(command).replace(/\$\{home\}|\$home\b/g, c.home).replace(ALIAS_IN, '/')
   const hasVar = /[$`]/.test(s)
-  // The guard reads globs as a default shell does: no dot matching, no zsh qualifiers like *(D).
   if (/dotglob|glob_?dots|[*?\]]\(/.test(s)) return deny('glob options and qualifiers the guard cannot read')
   const segs: Seg[] = []
   let cwd: string | null = null
   for (const words of segmentsOf(s)) {
     const i = commandAt(words)
     const g: Seg = { name: base(words[i] ?? ''), args: words.slice(i + 1), paths: [] }
-    // Paths in this segment at or above a sealed root, a relocating command's destination (its last word) left out.
     let near = false
     const dest = RELOCATE.has(g.name) && !g.args.some(a => a === '-t' || a.startsWith('--target-directory')) ? words.length - 1 : -1
     for (const [n, w] of words.entries()) {
@@ -355,7 +336,6 @@ function bashVerdict(command: unknown, c: Ctx): Verdict {
   return allow()
 }
 
-// `real` is where a file tool's target lands after symlinks, as the wiring resolves it. Any error denies.
 export function guardCheck(tool: string, input: unknown, p: GuardPaths & { allow: string[] }, real?: { path: string }): Verdict {
   try {
     const x = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>
@@ -363,7 +343,6 @@ export function guardCheck(tool: string, input: unknown, p: GuardPaths & { allow
     if (tool === 'Bash') return bashVerdict(x.command, c)
     const v = fileVerdict(tool, x, c, real)
     if (v.decision === 'deny') return v
-    // 7. Telegram only to the owner chat; any other MCP tool only when the owner listed it and it does not send.
     if (tool.startsWith(TG) && tool !== TG_DOWNLOAD) {
       const chat = x.chat_id
       if (p.ownerChat === null || (typeof chat !== 'string' && typeof chat !== 'number') || String(chat) !== p.ownerChat) return deny('Telegram goes only to the owner\'s chat')

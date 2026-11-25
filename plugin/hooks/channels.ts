@@ -1,5 +1,3 @@
-// Per-platform connection health for the status file (status.json `channels`). Reasons are the agreed list;
-// anything else would show as "error".
 export type Channel = { at: number; ok: boolean; reason?: 'token rejected' | 'network' | 'rate limited' | 'conflict' | 'stopped' }
 export type Owner = 'mine' | 'other' | 'none'
 
@@ -21,7 +19,6 @@ export function pollerOwner(ps: string, pollerPid: number | null, serverPid: num
 // shows as no report, so a restart never flashes red.
 export const START_GRACE_MS = 90_000
 
-// api: the Bot API getMe status, or 'network' when the call did not return. sinceStart: ms since its session started.
 export function telegramHealth(a: { now: number; poller: Owner; api: number | 'network'; sinceStart: number }): Channel | null {
   const at = a.now
   if (a.poller === 'other') return { at, ok: false, reason: 'conflict' }

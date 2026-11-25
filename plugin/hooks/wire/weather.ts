@@ -15,7 +15,6 @@ async function cityOf($: Engine) {
   return parseConfig(text === null ? null : String(text)).city
 }
 
-// Its session only; the guard's tool.call hook checks each call first.
 export function wireWeather(on: On, _ctx: Ctx) {
   for (const spec of WEATHER_SPECS) {
     on('tool.call', { tool: `${OWN}${spec.name}` }, async ($, e) => {

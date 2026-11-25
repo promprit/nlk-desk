@@ -11,11 +11,9 @@ test('the worker argv never persists a session or opens Telegram, and always use
   expect(a).not.toContain('--channels')
   expect(a).not.toContain('--continue')
   expect(a).not.toContain('--remote-control')
-  // The prompt goes on stdin: argv ends at the model.
   expect(a.slice(-2)).toEqual(['--model', 'sonnet'])
   expect(workerEnv('/H')).toEqual({ NLK_ROLE: 'worker', NLK_HOST: '', CLAUDE_CONFIG_DIR: '/H/.nlk/claude', TELEGRAM_STATE_DIR: '/H/.nlk/worker/telegram' })
   expect(workerDir('/H')).toBe('/H/.nlk/worker')
-  // Never the host's state dir: the plugin would stop its poller.
   expect(workerTgDir('/H')).not.toBe(telegramState('/H'))
 })
 
@@ -38,7 +36,6 @@ test('the prompt quotes the owner\'s messages and asks for the answer as text', 
 
 const out = (result: string, extra: object = {}) => JSON.stringify({ type: 'result', is_error: false, result, usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 100, cache_creation_input_tokens: 20 }, ...extra })
 
-// Defect caught: a worker error looks like an empty answer, so a failed brief is never retried.
 test('errors and empty output are never sent, and errors are told apart', async () => {
   expect(workerOutput(out(''))).toMatchObject({ status: 'nothing', text: null })
   expect(workerOutput(out('boom', { is_error: true }))).toMatchObject({ status: 'error', text: null })

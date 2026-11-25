@@ -6,7 +6,6 @@ const HOME = '/H'
 const START = { cwd: '/H/.nlk/desk', surface: 'terminal', isInteractive: true } as const
 
 function wire(on: any, reply: (url: string, body: any) => { status: number; json: unknown }, role: Record<string, string> = {}) {
-  // The guard lets a tool through only when it is on the owner's tools.allow list.
   const files: Record<string, string> = { [svcTokenFile(HOME)]: 'tok\n', [configFile(HOME)]: JSON.stringify({ tools: { allow: MEM_SPECS.map(s => `${OWN}${s.name}`) } }) }
   const w = { fetched: [] as { url: string; body: any }[], registered: [] as string[] }
   const env: Record<string, string | undefined> = { NLK_HOST: '1', HOME, CLAUDE_CONFIG_DIR: `${HOME}/.nlk/claude`, ...role }
@@ -46,7 +45,6 @@ test('memory_save sends a normal-mode memory to the service', async ($, on) => {
   expect(String(r.result)).toContain('5')
 })
 
-// Defect caught: a worker's saves look like things he said in chat.
 test('memory_save in a worker sends source worker', async ($, on) => {
   mock.clock(on, { now: 1 })
   const w = wire(on, () => ({ status: 200, json: { id: 6 } }), { NLK_ROLE: 'worker', NLK_HOST: '' })

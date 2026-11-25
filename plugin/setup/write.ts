@@ -13,7 +13,6 @@ const read = (p: string): string | null => {
 }
 const dirOf = (p: string): string => p.slice(0, p.lastIndexOf('/'))
 
-/** Writes only when the content differs, so a re-run leaves mtimes alone. */
 function put(path: string, content: string, mode = 0o644): void {
   if (read(path) === content) {
     console.log(`unchanged ${path}`)

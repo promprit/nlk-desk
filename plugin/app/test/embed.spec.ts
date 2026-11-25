@@ -2,7 +2,6 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { e5Embedder } from '../embed.ts'
 
-// A hand-driven clock: `fire()` runs the armed idle callback; nothing real is scheduled and no model is loaded.
 function rig() {
   const log: string[] = []
   const batches: number[] = []

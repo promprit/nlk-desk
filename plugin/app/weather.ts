@@ -9,7 +9,6 @@ export type Forecast = { now: number; high: number; low: number; hours: { hour: 
 const FORECAST = 'https://api.open-meteo.com/v1/forecast'
 const AIR = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 const GEO = 'https://geocoding-api.open-meteo.com/v1/search'
-// The default is plain Bangkok; the owner's own place is set by chat and stays in `<dir>/location.json`.
 const BANGKOK: Place = { name: 'Bangkok', lat: 13.7563, lon: 100.5018 }
 
 async function getJson(f: Fetch, url: string): Promise<any> {

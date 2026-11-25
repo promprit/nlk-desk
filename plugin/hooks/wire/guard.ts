@@ -15,14 +15,12 @@ async function guardPaths($: Engine): Promise<GuardPaths & { allow: string[] }> 
   }
 }
 
-// The absolute path a tool argument names: `~` is home, a relative path starts in the desk.
 function absOf(raw: string, home: string): string {
   const s = raw.replace(/^file:\/\//i, '')
   if (s.startsWith('~')) return normalize(home + (s.includes('/') ? s.slice(s.indexOf('/')) : ''))
   return normalize(s.startsWith('/') ? s : `${P.deskDir(home)}/${s}`)
 }
 
-// Where a path lands after symlinks; a path not there yet lands under its nearest existing ancestor.
 async function realOf($: Engine, path: string, home: string): Promise<{ path: string } | undefined> {
   let rest = ''
   for (let cur = absOf(path, home); cur !== '/'; ) {
@@ -35,7 +33,6 @@ async function realOf($: Engine, path: string, home: string): Promise<{ path: st
   return undefined
 }
 
-// The guard on where file tools and reply attachments land (a path that lands nowhere is denied). Every deny is logged.
 async function hostCheck($: Engine, tool: string, input: unknown): Promise<Verdict> {
   const gp = await guardPaths($)
   const x = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>

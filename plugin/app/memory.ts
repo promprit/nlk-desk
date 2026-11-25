@@ -19,7 +19,6 @@ const cosine = (a: Float32Array, b: Float32Array) => {
   return d / (Math.sqrt(x * y) || 1)
 }
 const segmenter = new Intl.Segmenter('th', { granularity: 'word' })
-/** Word-like pieces of a query (Thai and English), lowercased, without punctuation. */
 const words = (q: string) => [...segmenter.segment(q)].filter(s => s.isWordLike).map(s => s.segment.toLowerCase())
 const len = (w: string) => [...w].length
 /**
@@ -48,7 +47,6 @@ export function openMemory(file: string, embed: Embed, now: () => number = Date.
   const all = (sql: string, ...p: any[]) => db.prepare(sql).all(...p) as Row[]
   const run = (sql: string, ...p: any[]) => db.prepare(sql).run(...p)
 
-  /** Ids matching the query words, best first: FTS (trigram) for terms of 3+ characters, LIKE on the table for a query of only shorter ones. */
   const matchIds = (q: string, limit: number): number[] => {
     const { fts, short } = ftsQuery(q)
     if (fts) return all(`SELECT rowid AS id FROM memories_fts WHERE memories_fts MATCH ? ORDER BY rank LIMIT ${limit}`, fts).map(r => r.id as number)
@@ -56,7 +54,6 @@ export function openMemory(file: string, embed: Embed, now: () => number = Date.
     return all(`SELECT id FROM memories WHERE ${short.map(() => "text LIKE ? ESCAPE '\\'").join(' OR ')} LIMIT ${limit}`, ...short.map(w => `%${likeEsc(w)}%`)).map(r => r.id as number)
   }
 
-  /** Reciprocal-rank fusion of an FTS ranking and a vector ranking over the same candidate ids. */
   async function fuse(q: string, ids: number[], weight: (id: number) => number): Promise<{ id: number; score: number }[]> {
     if (!ids.length) return []
     const ok = new Set(ids)
@@ -127,7 +124,6 @@ export async function backup(src: string, destRoot: string, date: string): Promi
   // VACUUM INTO writes one consistent file (the WAL folded in) while the service keeps the database open.
   const db = new DatabaseSync(join(src, 'memory.db'), { readOnly: true })
   try { db.prepare('VACUUM INTO ?').run(join(out, 'memory.db')) } finally { db.close() }
-  // Only its own dated folders: anything else in destRoot is never touched.
   const dirs = (await readdir(destRoot, { withFileTypes: true })).filter(e => e.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(e.name)).map(e => e.name).sort()
   for (const d of dirs.slice(0, Math.max(0, dirs.length - 7))) await rm(join(destRoot, d), { recursive: true, force: true })
 }

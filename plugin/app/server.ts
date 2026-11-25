@@ -37,7 +37,6 @@ export function startServer(o: { port: number; token: string; io: SvcIo; routes:
       const body = raw ? JSON.parse(raw) : {}
       send(200, await route(body))
     } catch (e) {
-      // The hook swallows a 500, so svc.log is the only place it shows. Message and cause code only: never the body.
       const msg = e instanceof Error ? e.message : String(e)
       const code = (e as { cause?: { code?: unknown } })?.cause?.code
       log(`${path} failed: ${msg.slice(0, 200)}${typeof code === 'string' ? ` (${code})` : ''}`)
@@ -50,7 +49,6 @@ export function startServer(o: { port: number; token: string; io: SvcIo; routes:
   }))
 }
 
-/** Every route except `/fresh`: `/health`, memory (`~/.nlk/memory/memory.db`, backups to `~/NLK-backups`) and weather. */
 async function baseRoutes(home: string, d: { embed: Embed; fetch: typeof fetch }) {
   await mkdir(memoryDir(home), { recursive: true, mode: 0o700 })
   const mem = openMemory(`${memoryDir(home)}/memory.db`, d.embed)
@@ -62,7 +60,6 @@ async function baseRoutes(home: string, d: { embed: Embed; fetch: typeof fetch }
   return { mem, routes }
 }
 
-/** `/fresh`: tells the owner on Telegram (the service reads the bot token; the model never sees it), then restarts the chat session clean. */
 function freshFor(home: string): Routes {
   const tmuxBin = ['/opt/homebrew/bin/tmux', '/usr/local/bin/tmux'].find(p => existsSync(p)) ?? 'tmux'
   const restart = (resume: boolean) => restartSession({
@@ -95,7 +92,6 @@ async function main() {
   const { routes } = await baseRoutes(home, { embed: e5Embedder(modelsDir(home)), fetch })
   const s = await startServer({ port: Number(process.env.SVC_PORT ?? SVC_PORT), token, io: nodeIo(home), routes })
   console.log(`nlk-svc listening on 127.0.0.1:${s.port}`)
-  // /fresh mounts after the server starts: the routes object is read per request.
   Object.assign(routes, freshFor(home))
 }
 

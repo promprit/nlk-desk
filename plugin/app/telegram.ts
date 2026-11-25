@@ -7,7 +7,7 @@ export async function tgOpts(tgState: string, api = 'https://api.telegram.org'):
   const env = await readFile(`${tgState}/.env`, 'utf8').catch(() => '')
   const token = /^TELEGRAM_BOT_TOKEN=(.+)$/m.exec(env)?.[1]?.trim()
   let chat: string | undefined
-  try { chat = (JSON.parse(await readFile(`${tgState}/access.json`, 'utf8')) as { allowFrom?: unknown[] }).allowFrom?.[0]?.toString() } catch { /* unpaired */ }
+  try { chat = (JSON.parse(await readFile(`${tgState}/access.json`, 'utf8')) as { allowFrom?: unknown[] }).allowFrom?.[0]?.toString() } catch {}
   if (!token || !chat) throw new Error('not paired')
   return { api, token, chat }
 }

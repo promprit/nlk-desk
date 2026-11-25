@@ -24,7 +24,6 @@ function run(home: string, script: string, answers: string[], o: Opts = {}) {
 }
 
 const tmpHome = () => fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-home-'))
-// pairing "Is this you?", name, city, brief, awake, open editor
 const ANSWERS = ['y', 'Test', 'Bangkok', 'n', 'n', 'n']
 const install = (home: string, answers = ANSWERS) => {
   const r = run(home, 'install.sh', answers)
@@ -40,7 +39,6 @@ test('fresh install writes everything under ~/.nlk', () => {
   const home = tmpHome()
   install(home)
   for (const f of ['settings.json', 'app/server.ts', 'desk/CLAUDE.md', 'desk/private/persona.md', 'config.json', 'svc.token']) {
-    // svc.token is made by the service on its first start; the installer only makes its folder ready.
     if (f === 'svc.token') continue
     assert.ok(fs.existsSync(path.join(home, '.nlk', f)), `${f} missing`)
   }
@@ -116,7 +114,6 @@ test('keep-awake only when chosen', () => {
 
 test('missing prerequisite asks before brew', () => {
   const home = tmpHome()
-  // a PATH with the stubs but no tmux: stubs copied without tmux, node linked alone, no Homebrew dir
   const stubs = fs.mkdtempSync(path.join(os.tmpdir(), 'nlk-stubs-'))
   for (const f of fs.readdirSync(STUBS)) if (f !== 'tmux') fs.copyFileSync(path.join(STUBS, f), path.join(stubs, f))
   for (const f of fs.readdirSync(stubs)) fs.chmodSync(path.join(stubs, f), 0o755)

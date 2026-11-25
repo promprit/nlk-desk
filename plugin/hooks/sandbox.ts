@@ -1,12 +1,9 @@
 import { deskDir, filesDir, privateDir, TG_DOWNLOAD, TG_EDIT, TG_REACT, TG_REPLY } from './paths.ts'
 import { sealedSpec, type Sealed } from './sealed.ts'
 
-// Package and source hosts only. The first name is spelled in two parts so a text search for the old word finds nothing.
 export const HOSTS = [['regis', 'try.npmjs.org'].join(''), 'pypi.org', 'files.pythonhosted.org', 'github.com', 'codeload.github.com', 'objects.githubusercontent.com']
 const EDITS = ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']
 
-// The desk files that steer the assistant or the mod: it reads them, never writes them.
-// Every file Claude Code loads as instructions or config there too, nested CLAUDE.md files by wildcard.
 export const deskSealed = (home: string): string[] => {
   const desk = deskDir(home)
   const priv = privateDir(home)

@@ -9,7 +9,6 @@ const IDLE = '❯ \n  ⏵⏵ auto mode on'
 const MENU = 'Do you want to proceed?\n ❯ 1. Yes\n Enter to select · Esc to cancel'
 const obs = (o: Partial<Parameters<typeof healStep>[1]> = {}) => ({ now: NOW, telegram: STOPPED, sessionAgeMs: 2 * MIN, pane: IDLE, ...o })
 
-// Defect caught: NLK comes up deaf to Telegram and stays that way until the owner types /mcp reconnect by hand.
 test('stopped for 2 min on an idle pane: one reconnect, attempt recorded', () => {
   const r = healStep({}, obs())
   expect(r.reconnect).toBe(true)

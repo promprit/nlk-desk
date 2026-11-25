@@ -19,7 +19,6 @@ export const nodeIo = (home: string): SvcIo => ({
   now: () => Date.now(),
 })
 
-// Every service path derives from HOME: data root `~/.nlk`.
 export const nlkHome = (home: string) => `${home}/.nlk`
 export const svcTokenFile = (home: string) => `${nlkHome(home)}/svc.token`
 export const memoryDir = (home: string) => `${nlkHome(home)}/memory`

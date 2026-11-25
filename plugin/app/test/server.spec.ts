@@ -8,7 +8,6 @@ import type { SvcIo } from '../io.ts'
 
 const fakeIo = (): SvcIo => ({ home: '/nowhere', read: async () => null, append: async () => {}, now: () => 0 })
 
-// Memory routes minus every vault route (/mem/vault, /mem/reindex), weather, fresh and health; nothing else.
 test('mounts only memory, weather and health routes', async () => {
   const home = await mkdtemp(join(tmpdir(), 'nlksvc-'))
   const names = [...await routeNames(home)].sort()

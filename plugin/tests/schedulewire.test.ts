@@ -10,13 +10,9 @@ const START = { cwd: deskDir(HOME), surface: 'terminal', isInteractive: true } a
 const MIN = 60_000
 const at = (hhmm: string, day = '2026-10-21') => Date.parse(`${day}T${hhmm}:00+07:00`)
 const OK = (stdout = '') => ({ exitCode: 0, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false })
-// The guard lets a tool through only when it is on the owner's tools.allow list.
 const allow = ['remind', 'weather_today', 'set_location'].map(n => `${OWN}${n}`)
 const BRIEF_ON = { [configFile(HOME)]: JSON.stringify({ brief: { on: true, at: '09:00' }, city: { name: 'Bangkok', lat: 13.7, lon: 100.5 }, tools: { allow } }) }
 
-// One stub per engine op; `files` is the disk. A `claude -p` run is a worker: it answers `workerOut` with `workerExit`
-// (after `gate` when set) and lands in `workers`. `bodies` holds each service call's body by path; `failing` paths answer 502.
-// A write to a `badWrites` path throws.
 function wire(on: any, extra: Record<string, string> = {}) {
   const files: Record<string, string> = { [`${telegramState(HOME)}/access.json`]: '{"allowFrom":["111"]}', [svcTokenFile(HOME)]: 'tok\n', [configFile(HOME)]: JSON.stringify({ tools: { allow } }), ...extra }
   const w = {
@@ -209,7 +205,6 @@ test('a failed brief is retried once after 10 minutes, never twice', async ($, o
   expect(w.bodies['/remind/send']).toBeUndefined()
 })
 
-// Defect caught: a worker that fails inside its own JSON (is_error), or answers nothing, counts as a quiet brief, so the day has none.
 for (const [name, error, out, why] of [['is_error', true, 'x', 'worker error'], ['an empty result', false, '', 'empty']] as const) {
   test(`a brief the worker answers with ${name} is retried once`, async ($, on) => {
     const clock = mock.clock(on, { now: at('08:59') })

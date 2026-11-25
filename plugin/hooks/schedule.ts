@@ -14,7 +14,6 @@ export function bangkok(now: number): { date: string; minutes: number } {
   return { date: `${get('year')}-${get('month')}-${get('day')}`, minutes: Number(get('hour')) * 60 + Number(get('minute')) }
 }
 
-// Quiet hours 23:00-08:00: nothing unprompted except a reminder the owner set.
 export const quiet = (minutes: number): boolean => minutes >= 23 * 60 || minutes < 8 * 60
 
 const clock = (s: unknown): number | null => {

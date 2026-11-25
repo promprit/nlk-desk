@@ -7,7 +7,6 @@ import type { Ctx, On } from './ctx.ts'
 
 const MIN = 60_000
 const RETRY_MS = 10 * MIN
-// Past the 10-min worker timeout: a run still marked pending this long died with the host.
 const PENDING_MS = 15 * MIN
 const LATE_MS = 10 * MIN
 const REMIND_KEEP_MS = 24 * 60 * MIN
@@ -25,7 +24,6 @@ async function load($: Engine): Promise<Schedule> {
   return parseSchedule(await read($, P.scheduleFile(await homeOf($))))
 }
 
-// One read-modify-write at a time: the ticker, the worker and the remind tool share the schedule file.
 function serial<T>(fn: () => Promise<T>): Promise<T> {
   const run = writes.then(fn)
   writes = run.catch(() => {})
@@ -40,7 +38,6 @@ function change($: Engine, fn: (s: Schedule) => Schedule): Promise<Schedule> {
   })
 }
 
-// Numbers only, never text; the last 2000 runs.
 function logRun($: Engine, home: string, line: Record<string, unknown>): Promise<void> {
   return serial(async () => {
     const file = workerRunsFile(home)
@@ -54,13 +51,10 @@ export function resetTicker() {
   ticking = false
 }
 
-// A due reminder goes out from the service as a fixed line, no AI turn: in quiet hours too.
-// It is kept and retried each tick until sent, for up to 24 h after its time; over 10 min late it says so.
 async function remindTick($: Engine, now: number) {
   const r = due(now, await load($), {}).reminders[0]
   if (!r) return
   const dropped = now - r.at > REMIND_KEEP_MS
-  // Advanced before the send: a save that fails after a send would send it again next tick.
   await change($, s => ({
     ...s,
     reminders: s.reminders.flatMap(x => (x.id !== r.id ? [x] : next(x, now) ?? [])),
@@ -71,15 +65,11 @@ async function remindTick($: Engine, now: number) {
   if (!(await svc($, '/remind/send', { text })).ok) await change($, s => ({ ...s, reminders: [...s.reminders.filter(x => x.id !== r.id), r] }))
 }
 
-// A run is over: no longer pending, its error code kept (cleared on success); a failed brief gets one retry
-// 10 min on (`briefFailAt`), unless it was the retry.
 function ended(s: Schedule, at: number, why: string | undefined): Schedule {
   const { workerPending: _, lastWorkerError: _e, ...x } = s
   return { ...x, ...(why ? { lastWorkerError: why } : {}), ...(why && s.briefRetry !== bangkok(at).date ? { briefFailAt: at } : {}) }
 }
 
-// The brief in a `claude -p` session of its own: the chat session never sees it and the tick never waits on it.
-// `count` saves the slot as used and `workerPending` marks the run once the worker is ready to start.
 async function startBrief($: Engine, now: number, count: (s: Schedule) => Schedule) {
   const home = await homeOf($)
   const prompt = workerPrompt(BRIEF_PROMPT, recentMessages((await read($, P.inboundLog(home))) ?? '', now))
@@ -90,7 +80,6 @@ async function startBrief($: Engine, now: number, count: (s: Schedule) => Schedu
     .then(async r => {
       const out = workerOutput(r.stdout)
       const why = r.exitCode !== 0 ? `exit ${r.exitCode}` : out.status === 'error' ? 'worker error' : out.text === null ? 'empty' : undefined
-      // A failed log write never changes the run's outcome: once sent, it is never sent again.
       await logRun($, home, { at: now, kind: 'brief', ok: !why, ...(out.usage ?? {}) }).catch(() => {})
       if (why || out.text === null) return void (await end(why))
       if (!(await svc($, '/remind/send', { text: out.text })).ok) return void (await end('send failed'))
@@ -113,7 +102,6 @@ async function startBrief($: Engine, now: number, count: (s: Schedule) => Schedu
 async function briefTick($: Engine, now: number) {
   let s = await load($)
   const today = bangkok(now).date
-  // Only called with no worker running here: a run still pending this long was cut off by a restart (a brief is retried).
   const p = s.workerPending
   if (p && now - p.at >= PENDING_MS) s = await change($, x => ended(x, p.at, 'interrupted'))
   const config = parseConfig(await read($, P.configFile(await homeOf($))))
@@ -123,7 +111,6 @@ async function briefTick($: Engine, now: number) {
   }
 }
 
-// Every minute (started by the session wiring): a due reminder, then the brief when the config turns it on.
 export async function tick($: Engine) {
   if (ticking) return
   ticking = true
@@ -147,7 +134,6 @@ export async function registerScheduleTools($: Engine) {
   await $.tool.register(REMIND_SPEC)
 }
 
-// The remind tool's call handler. Its registration and the ticker start from wireStatus's session.start hook.
 export function wireSchedule(on: On, _ctx: Ctx) {
   on('tool.call', { tool: `${OWN}${REMIND_SPEC.name}` }, async ($, e) => {
     if (!(await hasTools($))) return { deny: 'NLK tools run only in its own session' }

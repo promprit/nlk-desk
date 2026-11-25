@@ -11,7 +11,6 @@ const base = (o: Partial<StatusFile> = {}): StatusFile => ({
   ...o,
 })
 
-// Defect caught: the status line hides the poller state or a newer-than-tested Claude Code version.
 test('status report shows paired, poller and versions', () => {
   const lines = statusReport(base(), NOW, '2.2.0').split('\n')
   expect(lines).toContain('Telegram: connected')

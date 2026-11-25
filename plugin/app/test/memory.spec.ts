@@ -5,7 +5,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { openMemory, backup, memRoutes } from '../memory.ts'
 
-// Concept buckets: "coffee" and "espresso" share one vector direction; everything else hashes elsewhere.
 const CONCEPT: Record<string, number> = { coffee: 0, espresso: 0, alpha: 1, beta: 2 }
 const fakeEmbed = async (texts: string[]) => texts.map(t => {
   const v = new Float32Array(8)
@@ -59,7 +58,6 @@ test('kinds filter and touch bumps updated', async () => {
   m.close()
 })
 
-// A real database file holding one memory, left open as the service holds it.
 const liveDb = async (dir: string) => {
   const m = openMemory(join(dir, 'memory.db'), fakeEmbed)
   await m.save({ ...base, text: 'alpha backed up' })
@@ -107,7 +105,6 @@ test('backup pruning removes only its own dated folders', async () => {
   assert.equal(left.filter(n => /^\d{4}-\d{2}-\d{2}$/.test(n)).length, 7)
 })
 
-// Thai has no spaces: the keyword half of the ranking must still find it. fakeEmbed gives every Thai text the same vector, so only the FTS half can tell them apart.
 const thai = async () => {
   const m = openMemory(':memory:', fakeEmbed)
   await m.save({ ...base, text: 'เมนูกาแฟโปรดคือลาเต้เย็นไม่หวาน' })

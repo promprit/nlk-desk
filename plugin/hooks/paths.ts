@@ -1,8 +1,6 @@
-// Every runtime path derives from HOME; nothing here is a fixed absolute path.
 export const nlkHome = (home: string) => `${home}/.nlk`
 export const deskDir = (home: string) => `${nlkHome(home)}/desk`
 export const privateDir = (home: string) => `${deskDir(home)}/private`
-// Its Claude config dir belongs to Claude Code; the mod owns only the Telegram channel state inside it.
 export const configDir = (home: string) => `${nlkHome(home)}/claude`
 export const telegramState = (home: string) => `${configDir(home)}/channels/telegram-nlk`
 export const appDir = (home: string) => `${nlkHome(home)}/app`
@@ -16,7 +14,6 @@ export const inboundLog = (home: string) => `${logsDir(home)}/inbound.jsonl`
 export const filesDir = (home: string) => `${nlkHome(home)}/files`
 export const backupsDir = (home: string) => `${home}/NLK-backups`
 export const launcherSettingsFile = (home: string) => `${nlkHome(home)}/settings.json`
-// One folder as a lock between writers of the files above (see lock.ts).
 export const lockDir = (home: string) => `${nlkHome(home)}/lock`
 
 export const SVC_PORT = 4330

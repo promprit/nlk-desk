@@ -50,7 +50,6 @@ test('recall with service down passes through', async ($, on) => {
   expect(w.entered).toEqual([msg('111', 'hi')])
 })
 
-// Channel prompts are isMeta: a text rewrite is ignored when they start a turn, so recall rides in `context`.
 test('owner prompt gets the recall block as context, the text untouched', async ($, on) => {
   mock.clock(on, { now: 1 })
   const w = wire(on, hits)
@@ -73,7 +72,6 @@ test('non-owner and non-channel prompts get no recall', async ($, on) => {
   const w = wire(on, hits)
   await $.prompt.submit({ text: msg('222', 'hi'), origin: TG } as any)
   await $.prompt.submit({ text: 'hi', origin: { kind: 'composer' } } as any)
-  // The stranger's message is dropped (never entered); the composer prompt passes untouched.
   expect(w.entered).toEqual(['hi'])
   expect(w.context).toEqual([])
   expect(w.fetched).toEqual([])

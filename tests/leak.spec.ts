@@ -15,7 +15,6 @@ test('matches 2-4 word runs', () => {
 })
 
 test('repo is clean', () => {
-  // tracked files via `git ls-files`, skipping tests/leak-hashes.json and binary files
   const hits = scan(repoFiles(), loadHashes())
   assert.deepEqual(hits, [])
 })

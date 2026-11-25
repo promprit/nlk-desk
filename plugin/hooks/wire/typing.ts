@@ -3,13 +3,11 @@ import { homeOf, ownerChat, type Engine } from '../engine.ts'
 import type { Ctx, On } from './ctx.ts'
 import { startTyping } from '../typing.ts'
 
-// Set by prompt.submit for the owner's verified message; the next main-loop turn.start takes it. Scheduled and brief turns never set it.
 let armed = false
 let stop: (() => void) | null = null
 
 export function armTyping() { armed = true }
 
-// The token is read here and goes nowhere but the request URL; a failure carries no text out.
 async function sendTyping($: Engine): Promise<void> {
   const env = await $.fs.read(`${P.telegramState(await homeOf($))}/.env`)
   const token = /^TELEGRAM_BOT_TOKEN=(\S+)/m.exec(typeof env === 'string' ? env : '')?.[1]
