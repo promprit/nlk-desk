@@ -10,7 +10,14 @@ case "${1:-}" in
   backup)
     dest="$HOME/NLK-backups/$(date +%Y-%m-%d-%H%M)"
     mkdir -p "$dest"
-    if [ -e "$NLK/memory" ]; then cp -R "$NLK/memory" "$dest/memory"; fi
+    tok=""
+    if [ -r "$NLK/svc.token" ]; then tok=$(tr -d '\r\n' < "$NLK/svc.token"); fi
+    # The running service backs up its own database (VACUUM INTO) while it is open; copy the files only when it does not answer.
+    if [ -n "$tok" ] && curl -fsS -m 10 -X POST -H "Authorization: Bearer $tok" http://127.0.0.1:4330/mem/backup >/dev/null 2>&1; then
+      echo "Memory backed up by the running service"
+    elif [ -e "$NLK/memory" ]; then
+      cp -R "$NLK/memory" "$dest/memory"
+    fi
     if [ -e "$NLK/config.json" ]; then cp "$NLK/config.json" "$dest/config.json"; fi
     echo "Backed up to $dest"
     ;;
