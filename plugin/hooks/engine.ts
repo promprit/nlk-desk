@@ -1,6 +1,7 @@
 import type { Hook } from 'claude-code'
 import * as P from './paths.ts'
 import { roleOf } from './role.ts'
+import { deskClaudeMd } from './persona.ts'
 import { withFileLock, type LockIo } from './lock.ts'
 
 export type Engine = Parameters<Hook<'session.start'>>[0]
@@ -76,8 +77,13 @@ export async function appendInbound($: Engine, home: string, line: string): Prom
   })
 }
 
-// Filled in Task 4.
-export const refreshDeskClaudeMd = async (): Promise<void> => {}
+// Writes the desk CLAUDE.md when it differs from the generated text.
+export async function refreshDeskClaudeMd($: Engine): Promise<void> {
+  const text = deskClaudeMd()
+  const file = `${P.deskDir(await homeOf($))}/CLAUDE.md`
+  const cur = await $.fs.read(file).catch(() => null)
+  if (cur !== text) await $.fs.write(file, text)
+}
 
 // The `kind` keeps the line in the format a denies report reads.
 export async function logDeny($: Engine, rule: string, tool: string): Promise<void> {
