@@ -1,0 +1,11 @@
+{
+  "name": "nlk-svc",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.2.0"
+  }
+}
