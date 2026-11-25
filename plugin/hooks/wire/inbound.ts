@@ -2,7 +2,6 @@ import type { PromptOrigin } from 'claude-code'
 import * as P from '../paths.ts'
 import { HELD, inboundLine, parseChannel, type Channel, type Who } from '../inbound.ts'
 import { recallFor } from '../recall.ts'
-import { configFile } from '../paths.ts'
 import { parseConfig } from '../schedule.ts'
 import { styleBlock } from '../style.ts'
 import { appendInbound, homeOf, isHost, logDeny, svc, type Engine } from '../engine.ts'
@@ -55,7 +54,7 @@ export function wireInbound(on: On, _ctx: Ctx) {
     if (!owner) return next(e)
     armTyping()
     const block = await recallFor((path, body) => svc($, path, body), owner.text).catch(() => '')
-    const cfgText = await $.fs.read(configFile(await homeOf($))).catch(() => null)
+    const cfgText = await $.fs.read(P.configFile(await homeOf($))).catch(() => null)
     const style = styleBlock(parseConfig(cfgText === null ? null : String(cfgText)).style)
     return next({ ...e, context: [...(e.context ?? []), style, ...(block ? [block] : [])] })
   })

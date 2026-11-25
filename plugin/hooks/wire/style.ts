@@ -4,7 +4,6 @@ import { configFile } from '../paths.ts'
 import { hasTools, homeOf, type Engine } from '../engine.ts'
 import type { Ctx, On } from './ctx.ts'
 
-// Called from wireSchedule's session.start hook: a module has one matcher-less session.start hook.
 export async function registerStyleTool($: Engine) {
   await $.tool.register(STYLE_SPEC)
 }
