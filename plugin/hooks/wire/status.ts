@@ -80,7 +80,6 @@ async function openGate($: Engine, cwd: string, now: number) {
   await update($, gateAtom, () => openOrMute(reason, now))
 }
 
-// Called for the host session in the desk folder.
 async function registerAll($: Engine) {
   await registerMemTools($).catch(() => {})
   await registerWeatherTools($).catch(() => {})

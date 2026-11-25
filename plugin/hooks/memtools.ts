@@ -1,6 +1,5 @@
 import { dateOf } from './recall.ts'
 
-// The tools the mod registers for itself.
 export const OWN = 'mcp__nlk__'
 
 export const MEM_DOWN = 'my service is down; try again in a minute'

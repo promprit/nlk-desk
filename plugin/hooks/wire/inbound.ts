@@ -36,7 +36,6 @@ async function logInbound($: Engine, c: { msgId: string; text: string }) {
   }
 }
 
-// One prompt.submit hook per module: the owner check, the inbound log, recall.
 export function wireInbound(on: On, _ctx: Ctx) {
   on('prompt.submit', async ($, e, next) => {
     const { who, c } = await ownerMessage($, e.text, e.origin)

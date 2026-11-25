@@ -50,7 +50,6 @@ function logRun($: Engine, home: string, line: Record<string, unknown>): Promise
   })
 }
 
-// A new session starts between turns.
 export function resetTicker() {
   ticking = false
 }
@@ -101,7 +100,6 @@ async function startBrief($: Engine, now: number, count: (s: Schedule) => Schedu
       await end('timeout')
     })
     .catch(() => {})
-    // Whatever happened, this run is no longer pending.
     .finally(async () => {
       await change($, s => {
         if (s.workerPending?.at !== now) return s

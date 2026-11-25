@@ -24,7 +24,6 @@ export function parseChannel(text: string): Channel | null {
   const w = wrapper(text)
   if (!w) return null
   const { a } = w
-  // In a Telegram DM the chat id equals the user id.
   const userId = a.user_id ?? a.chat_id
   const msgId = a.message_id
   if (!a.source?.endsWith('telegram') || !userId || !DIGITS.test(userId) || !msgId || !DIGITS.test(msgId)) return null

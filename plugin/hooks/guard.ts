@@ -143,7 +143,6 @@ function strings(v: unknown, key: string, out: [string, string][], depth = 0): [
 function fileVerdict(tool: string, x: Record<string, unknown>, c: Ctx, real?: { path: string }): Verdict {
   const pathOf = (raw: string): string | null => (!/^[~/]|^file:\/\//i.test(raw) && climbs(raw) ? null : expand(raw, c.home, c.desk))
   const hitOf = (abs: string) => (tool === 'Read' ? readHit(abs, c) : sealedHit(abs, c))
-  // 1. any path-like value, or the symlink target, under a sealed root.
   for (const [k, v] of strings(x, '', [])) {
     const pathish = PATH_KEYS.has(k) || (!TEXT_KEYS.has(k) && !v.includes('\n') && /^([~/]|file:\/\/)/i.test(v))
     if (!pathish) continue
@@ -154,7 +153,6 @@ function fileVerdict(tool: string, x: Record<string, unknown>, c: Ctx, real?: { 
   }
   const realAbs = real ? expand(real.path, c.home, null) : null
   if (realAbs !== null && hitOf(realAbs)) return deny('the link leads into a sealed folder')
-  // 2. settings files and git config.
   if (WRITE_TOOLS.has(tool)) {
     for (const t of [typeof x.file_path === 'string' ? x.file_path : typeof x.notebook_path === 'string' ? x.notebook_path : '', real?.path ?? '']) {
       if (!t) continue
@@ -163,14 +161,12 @@ function fileVerdict(tool: string, x: Record<string, unknown>, c: Ctx, real?: { 
       if (abs !== null && isGitConfig(abs)) return deny('git config can alias push')
     }
   }
-  // 3. desk files that steer the assistant are never written.
   if (WRITE_TOOLS.has(tool)) {
     for (const t of [typeof x.file_path === 'string' ? x.file_path : typeof x.notebook_path === 'string' ? x.notebook_path : '', real?.path ?? '']) {
       const abs = t ? expand(t, c.home, c.desk) : null
       if (abs !== null && deskSealedPath(abs, c)) return deny('that desk file is read-only')
     }
   }
-  // 5b. a search over a parent of a sealed root.
   if (tool === 'Glob' || tool === 'Grep') {
     const base = typeof x.path === 'string' && x.path ? pathOf(x.path) : c.desk
     if (base === null || nearSealed(base, c) || (realAbs !== null && nearSealed(realAbs, c))) return deny('search inside one folder, not a parent of a sealed one')
@@ -337,7 +333,6 @@ function bashVerdict(command: unknown, c: Ctx): Verdict {
     if (near && hasVar) return deny('variables next to a parent of a sealed folder')
     segs.push(g)
   }
-  // 4. keychain, push, deletes, settings writes.
   if (/\bsecurity\b/.test(s)) return deny('the keychain is sealed')
   // ps e / ps -E prints another process's environment, the a token included. A text heuristic over the
   // whole command, so bash -c "ps e" and xargs ps e count too: the word ps, then any later option word with e in it
@@ -350,15 +345,12 @@ function bashVerdict(command: unknown, c: Ctx): Verdict {
   if (del.decision === 'deny') return del
   const settings = /settings(\.local)?\.json/.test(s) || segs.some(g => g.args.some(a => WILD.test(a) && isSettings(a)))
   if (settings && (/>|\btee\b/.test(s) || segs.some(g => !READ_ONLY.has(g.name)))) return deny('settings.json is account config')
-  // 5. sending anywhere but the owner's Telegram chat.
   if (SEND.test(s)) return deny('NLK sends only to the owner on Telegram')
   const gh = ghVerdict(segs)
   if (gh.decision === 'deny') return gh
   const web = webVerdict(command)
   if (web.decision === 'deny') return web
-  // 5b. diffs outside a repo.
   if (/--no-index\b/.test(s)) return deny('diff --no-index reads any file')
-  // 6. installs.
   if (installKey(command) !== null) return deny('installs are blocked; the owner can run it themselves')
   return allow()
 }

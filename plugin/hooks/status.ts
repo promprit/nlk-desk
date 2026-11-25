@@ -7,7 +7,6 @@ export type StatusFile = {
   busy?: boolean
   replyAt?: number
   channels?: { telegram?: { at: number; ok: boolean; reason?: string } }
-  // The running Claude Code version, when the engine reports it.
   claude?: string
 }
 export const STALE_MS = 300_000
