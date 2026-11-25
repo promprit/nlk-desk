@@ -1,1 +1,1 @@
-{ "name": "nlk", "version": "0.1.0", "author": { "name": "NLK" }, "description": "NLK: a personal Telegram assistant", "types": "./types/index.d.ts" }
+{ "name": "nlk", "version": "0.1.1", "author": { "name": "NLK" }, "description": "NLK: a personal Telegram assistant", "types": "./types/index.d.ts" }
