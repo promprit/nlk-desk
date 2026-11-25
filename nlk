@@ -1,0 +1,18 @@
+#!/bin/bash
+# nlk status|restart|stop|logs|backup
+set -euo pipefail
+
+NLK="$HOME/.nlk"
+case "${1:-}" in
+  status) exec node "$NLK/bin/status.ts" ;;
+  restart | stop) exec bash "$NLK/ctl.sh" "$1" ;;
+  logs) exec tail -n 50 "$NLK"/logs/*.log ;;
+  backup)
+    dest="$HOME/NLK-backups/$(date +%Y-%m-%d-%H%M)"
+    mkdir -p "$dest"
+    cp -R "$NLK/memory" "$dest/memory"
+    cp "$NLK/config.json" "$dest/config.json"
+    echo "Backed up to $dest"
+    ;;
+  *) echo "usage: nlk status|restart|stop|logs|backup"; exit 2 ;;
+esac
