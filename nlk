@@ -10,8 +10,8 @@ case "${1:-}" in
   backup)
     dest="$HOME/NLK-backups/$(date +%Y-%m-%d-%H%M)"
     mkdir -p "$dest"
-    cp -R "$NLK/memory" "$dest/memory"
-    cp "$NLK/config.json" "$dest/config.json"
+    if [ -e "$NLK/memory" ]; then cp -R "$NLK/memory" "$dest/memory"; fi
+    if [ -e "$NLK/config.json" ]; then cp "$NLK/config.json" "$dest/config.json"; fi
     echo "Backed up to $dest"
     ;;
   *) echo "usage: nlk status|restart|stop|logs|backup"; exit 2 ;;
