@@ -82,6 +82,7 @@ The installer walks through nine steps and skips any that are already done, so i
   - `./nlk logs`
   - `./nlk backup` copies your memory and settings to `~/NLK-backups`
 - To change its personality or house rules, edit `~/.nlk/desk/private/persona.md` and `core.md`, then run `./nlk restart`.
+- The style you set in the chat (gender, age, tone, emoji, language, what it calls you) overrides any particle, self word, form of address, tone or language rule in `persona.md`. An old `persona.md` with fixed particles like ค่ะ does not win over it.
 
 ## Update
 

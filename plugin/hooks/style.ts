@@ -78,6 +78,7 @@ export function styleBlock(s: Style | undefined): string {
   const addr = { younger: `พี่${name}`, same: name, older: `น้อง${name}` }[st.age!]
   return [
     '<style>',
+    'This style overrides any particle, self word, form of address, tone or language rule in persona.md.',
     st.gender === 'female' ? 'End Thai sentences with ค่ะ (คะ in questions).' : 'End Thai sentences with ครับ.',
     `Call yourself ${self} and the owner ${addr}.`,
     TONE[st.tone!],
