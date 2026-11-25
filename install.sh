@@ -78,6 +78,8 @@ add_plugin telegram@claude-plugins-official
 add_market "$REPO" nlk
 add_plugin nlk@nlk
 node "$SETUP/write.ts" app >/dev/null
+# Stop the service first so it is not running against node_modules while npm ci replaces them; the start step below brings it back.
+launchctl print "gui/$(id -u)/com.nlk.svc" >/dev/null 2>&1 && launchctl bootout "gui/$(id -u)/com.nlk.svc" >/dev/null 2>&1 || true
 (cd "$NLK/app" && npm ci --omit=dev >/dev/null)
 ok plugins
 
